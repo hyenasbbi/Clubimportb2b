@@ -481,3 +481,97 @@ input::placeholder, textarea::placeholder { color: #5e5e5c; }
   .site-footer { align-items: flex-start; flex-direction: column; justify-content: center; }
   .secure-label { display: none; }
 }
+
+/* =====================================================================
+   CLUB IMPORTB2B V2 — puntos por compra + historia verificada
+   ===================================================================== */
+.club-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(239,42,42,.28);
+  background: rgba(239,42,42,.08);
+  color: #ffd7d7;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .03em;
+}
+.club-pill--small { min-height: 26px; padding: 0 8px; font-size: 10px; }
+.status-badge.is-pending { color: #ffd98a; border-color: rgba(246,185,75,.30); background: rgba(246,185,75,.10); }
+
+.verification-note,
+.verification-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  border: 1px solid rgba(239,42,42,.22);
+  background: rgba(239,42,42,.07);
+  border-radius: 14px;
+  padding: 15px 16px;
+  color: #d8d8d5;
+}
+.verification-note { margin-bottom: 18px; }
+.verification-note strong,
+.verification-banner strong { color: white; }
+.verification-note span,
+.verification-banner span { color: var(--muted); font-size: 12px; }
+.verification-note--compact { margin: 0 0 16px; }
+.verification-banner { margin: 18px 0; }
+
+.club-rule-text {
+  margin: -4px 0 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #0b0b0b;
+  border: 1px solid var(--line);
+  color: #c9c9c6;
+  font-size: 12px;
+}
+
+.detail-stats--three { grid-template-columns: repeat(3, 1fr); }
+.point-change {
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 900;
+}
+.history-extra {
+  display: block;
+  color: #bdbdb9;
+  margin: 3px 0;
+}
+
+.rules-intro { margin-bottom: 18px; }
+.rules-intro h2 { margin: 4px 0 8px; font-size: 28px; }
+.rules-intro p { margin: 0; color: var(--muted); max-width: 900px; }
+.rules-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.rule-card { min-height: 100%; }
+.rule-card__header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 10px; }
+.rule-card__header h2 { margin: 4px 0 0; font-size: 24px; }
+.rule-card > p { color: var(--muted); margin: 0 0 16px; }
+.rule-condition { margin-bottom: 16px; padding: 11px 12px; border-radius: 11px; border: 1px solid rgba(246,185,75,.22); background: rgba(246,185,75,.07); color: #e8d5aa; font-size: 12px; }
+.rule-milestones { display: grid; gap: 9px; }
+.rule-milestone { display: grid; grid-template-columns: 120px 1fr; gap: 5px 12px; padding: 13px 14px; border-radius: 12px; border: 1px solid var(--line); background: #0d0d0d; }
+.rule-milestone strong { color: var(--red); font-size: 12px; }
+.rule-milestone span { font-weight: 900; }
+.rule-milestone small { grid-column: 2; color: var(--muted); }
+
+.progress-description { color: var(--muted); margin: -8px 0 18px; font-size: 13px; }
+.reward-card.is-locked { opacity: .58; filter: grayscale(.55); }
+.reward-card.is-locked .reward-icon { color: #777; }
+.reward-card.is-delivered { border-color: rgba(69,212,131,.42); background: linear-gradient(135deg, rgba(69,212,131,.12), var(--panel)); }
+.reward-card.is-delivered .reward-icon { color: var(--green); }
+.reward-card.is-delivered .reward-card__topline span { color: var(--green); font-weight: 900; }
+.reward-card.is-unlocked .reward-card__topline span { color: #8ce8af; font-weight: 900; }
+
+@media (max-width: 900px) {
+  .rules-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .detail-stats--three { grid-template-columns: 1fr; }
+  .rule-milestone { grid-template-columns: 1fr; }
+  .rule-milestone small { grid-column: auto; }
+  .verification-banner { margin-top: 14px; }
+}
