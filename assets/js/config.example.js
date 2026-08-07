@@ -6,6 +6,6 @@
   4. Nunca pegues aquí la service_role key.
 */
 window.CLUB_CONFIG = Object.freeze({
-  SUPABASE_URL: "https://ltjaxjwyacrlcyfzpgkq.supabase.co/rest/v1/",
+  SUPABASE_URL: "https://ltjaxjwyacrlcyfzpgkq.supabase.co",
   SUPABASE_ANON_KEY: "sb_publishable_8mQDib-dbPhcJtdxPfEnBA_rMmB6rin"
 });
