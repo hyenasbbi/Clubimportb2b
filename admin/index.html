@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <title>Panel administrativo | Club IMPORTB2B</title>
+  <link rel="stylesheet" href="/assets/css/styles.css">
+</head>
+<body class="admin-page">
+  <div id="adminLoading" class="admin-gate">
+    <span class="loader" aria-hidden="true"></span>
+    <strong>Validando acceso administrativo</strong>
+  </div>
+
+  <div id="adminApp" class="admin-app" hidden>
+    <aside class="admin-sidebar">
+      <a class="brand brand--sidebar" href="/">
+        <span class="brand-mark" aria-hidden="true"><i></i>IB</span>
+        <span class="brand-copy"><strong>IMPORTB2B</strong><small>ADMIN CLUB</small></span>
+      </a>
+
+      <nav class="admin-nav" aria-label="Secciones administrativas">
+        <button class="nav-button is-active" type="button" data-view="dashboard"><span>01</span>Resumen</button>
+        <button class="nav-button" type="button" data-view="clients"><span>02</span>Clientes</button>
+        <button class="nav-button" type="button" data-view="rewards"><span>03</span>Recompensas</button>
+        <button class="nav-button" type="button" data-view="redemptions"><span>04</span>Canjes</button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="admin-identity">
+          <span id="adminInitials">AD</span>
+          <div><strong id="adminName">Administrador</strong><small id="adminEmail">—</small></div>
+        </div>
+        <button id="logoutButton" class="button button--ghost button--full" type="button">Cerrar sesión</button>
+      </div>
+    </aside>
+
+    <div class="admin-main">
+      <header class="admin-topbar">
+        <button id="menuButton" class="menu-button" type="button" aria-label="Abrir menú" aria-expanded="false">☰</button>
+        <div>
+          <span class="eyebrow">CLUB IMPORTB2B</span>
+          <h1 id="viewTitle">Resumen general</h1>
+        </div>
+        <button id="quickCreateButton" class="button button--primary" type="button">+ Nuevo cliente</button>
+      </header>
+
+      <main class="admin-content">
+        <section id="view-dashboard" class="admin-view is-active">
+          <div id="statsGrid" class="stats-grid"></div>
+          <div class="dashboard-grid">
+            <section class="panel">
+              <div class="panel-heading">
+                <div><span class="eyebrow">ÚLTIMOS REGISTROS</span><h2>Clientes recientes</h2></div>
+                <button class="text-button" type="button" data-go-view="clients">Ver todos</button>
+              </div>
+              <div id="recentClients" class="compact-list"></div>
+            </section>
+            <section class="panel">
+              <div class="panel-heading">
+                <div><span class="eyebrow">PENDIENTES</span><h2>Canjes por resolver</h2></div>
+                <button class="text-button" type="button" data-go-view="redemptions">Gestionar</button>
+              </div>
+              <div id="pendingRedemptions" class="compact-list"></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="view-clients" class="admin-view">
+          <div class="toolbar">
+            <label class="search-field">
+              <span aria-hidden="true">⌕</span>
+              <input id="clientSearch" type="search" placeholder="Buscar por nombre, teléfono, Instagram o código">
+            </label>
+            <button id="createClientButton" class="button button--primary" type="button">+ Crear cliente</button>
+          </div>
+
+          <section class="panel table-panel">
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Cliente</th>
+                    <th>Código</th>
+                    <th>Actividad</th>
+                    <th>Créditos</th>
+                    <th>Estado</th>
+                    <th aria-label="Acciones"></th>
+                  </tr>
+                </thead>
+                <tbody id="clientsTableBody"></tbody>
+              </table>
+            </div>
+            <div id="clientsEmpty" class="empty-state" hidden>No se encontraron clientes.</div>
+          </section>
+        </section>
+
+        <section id="view-rewards" class="admin-view">
+          <div class="two-column-layout">
+            <form id="rewardForm" class="panel form-panel" novalidate>
+              <div class="panel-heading">
+                <div><span class="eyebrow">CONFIGURACIÓN</span><h2 id="rewardFormTitle">Nueva recompensa</h2></div>
+              </div>
+              <input id="rewardId" type="hidden">
+              <label class="form-field"><span>Nombre</span><input id="rewardName" required maxlength="120" placeholder="Ej. 10% de descuento"></label>
+              <label class="form-field"><span>Descripción</span><textarea id="rewardDescription" required maxlength="500" rows="4" placeholder="Describe el beneficio"></textarea></label>
+              <div class="form-grid">
+                <label class="form-field"><span>Créditos requeridos</span><input id="rewardCredits" type="number" min="1" required placeholder="500"></label>
+                <label class="form-field"><span>Stock (vacío = ilimitado)</span><input id="rewardStock" type="number" min="0" placeholder="Sin límite"></label>
+              </div>
+              <label class="form-field"><span>Orden de visualización</span><input id="rewardOrder" type="number" min="0" value="0"></label>
+              <label class="check-field"><input id="rewardActive" type="checkbox" checked><span>Recompensa activa y visible</span></label>
+              <div class="form-actions">
+                <button id="cancelRewardEdit" class="button button--ghost" type="button" hidden>Cancelar</button>
+                <button class="button button--primary" type="submit">Guardar recompensa</button>
+              </div>
+            </form>
+
+            <section class="panel">
+              <div class="panel-heading"><div><span class="eyebrow">CATÁLOGO</span><h2>Recompensas creadas</h2></div></div>
+              <div id="adminRewardsList" class="admin-reward-list"></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="view-redemptions" class="admin-view">
+          <div class="two-column-layout two-column-layout--wide">
+            <form id="redemptionForm" class="panel form-panel" novalidate>
+              <div class="panel-heading"><div><span class="eyebrow">NUEVO CANJE</span><h2>Registrar recompensa</h2></div></div>
+              <label class="form-field"><span>Cliente</span><select id="redemptionClient" required><option value="">Seleccionar cliente</option></select></label>
+              <label class="form-field"><span>Recompensa</span><select id="redemptionReward" required><option value="">Seleccionar recompensa</option></select></label>
+              <label class="form-field"><span>Notas</span><textarea id="redemptionNotes" rows="3" maxlength="500" placeholder="Información de entrega o coordinación"></textarea></label>
+              <button class="button button--primary button--full" type="submit">Confirmar canje</button>
+            </form>
+
+            <section class="panel table-panel">
+              <div class="panel-heading"><div><span class="eyebrow">HISTORIAL</span><h2>Canjes registrados</h2></div></div>
+              <div class="table-wrap">
+                <table class="data-table">
+                  <thead><tr><th>Cliente</th><th>Recompensa</th><th>Créditos</th><th>Fecha</th><th>Estado</th><th></th></tr></thead>
+                  <tbody id="redemptionsTableBody"></tbody>
+                </table>
+              </div>
+              <div id="redemptionsEmpty" class="empty-state" hidden>No hay canjes registrados.</div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <dialog id="clientDialog" class="modal">
+    <form id="clientForm" class="modal-card" novalidate>
+      <div class="modal-heading">
+        <div><span class="eyebrow">CLIENTE</span><h2 id="clientFormTitle">Crear cliente</h2></div>
+        <button class="icon-button" type="button" data-close-dialog="clientDialog" aria-label="Cerrar">×</button>
+      </div>
+      <input id="clientId" type="hidden">
+      <label class="form-field"><span>Nombre completo</span><input id="clientFullName" required maxlength="160" placeholder="Nombre y apellido"></label>
+      <div class="form-grid">
+        <label class="form-field"><span>Teléfono</span><input id="clientPhone" maxlength="60" placeholder="+54 9 ..."></label>
+        <label class="form-field"><span>Instagram</span><input id="clientInstagram" maxlength="80" placeholder="@usuario"></label>
+      </div>
+      <label class="form-field"><span>Fecha de ingreso</span><input id="clientJoinedAt" type="date" required></label>
+      <label class="form-field"><span>Notas internas</span><textarea id="clientNotes" rows="4" maxlength="1000" placeholder="Información visible solo para administradores"></textarea></label>
+      <p id="clientFormMessage" class="form-message" aria-live="polite"></p>
+      <div class="form-actions">
+        <button class="button button--ghost" type="button" data-close-dialog="clientDialog">Cancelar</button>
+        <button id="saveClientButton" class="button button--primary" type="submit">Guardar cliente</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="clientDetailDialog" class="modal modal--wide">
+    <div class="modal-card modal-card--wide">
+      <div class="modal-heading">
+        <div><span class="eyebrow">FICHA DEL CLIENTE</span><h2 id="detailClientName">Cliente</h2></div>
+        <button class="icon-button" type="button" data-close-dialog="clientDetailDialog" aria-label="Cerrar">×</button>
+      </div>
+
+      <div class="client-detail-header">
+        <div class="client-detail-meta">
+          <span id="detailClientStatus" class="status-badge is-active">Activo</span>
+          <strong id="detailClientCode">—</strong>
+          <span id="detailClientContact">—</span>
+        </div>
+        <div class="client-detail-actions">
+          <button id="copyClientLink" class="button button--ghost" type="button">Copiar enlace</button>
+          <button id="editSelectedClient" class="button button--ghost" type="button">Editar</button>
+          <button id="toggleSelectedClient" class="button button--ghost" type="button">Desactivar</button>
+          <button id="deleteSelectedClient" class="button button--danger" type="button">Eliminar</button>
+        </div>
+      </div>
+
+      <div class="detail-stats">
+        <article><small>Compras</small><strong id="detailPurchases">0</strong></article>
+        <article><small>Historias</small><strong id="detailStories">0</strong></article>
+        <article><small>Referidos</small><strong id="detailReferrals">0</strong></article>
+        <article><small>Créditos</small><strong id="detailCredits">0</strong></article>
+      </div>
+
+      <div class="detail-grid">
+        <form id="actionForm" class="panel form-panel form-panel--compact" novalidate>
+          <div class="panel-heading"><div><span class="eyebrow">NUEVO MOVIMIENTO</span><h3>Registrar actividad</h3></div></div>
+          <label class="form-field"><span>Tipo de acción</span>
+            <select id="actionType" required>
+              <option value="purchase">Compra</option>
+              <option value="instagram_story">Historia de Instagram</option>
+              <option value="referral">Referido</option>
+              <option value="manual_adjustment">Ajuste manual</option>
+              <option value="other">Otro movimiento</option>
+            </select>
+          </label>
+          <label class="form-field"><span>Créditos a sumar o restar</span><input id="actionCredits" type="number" value="0" required><small>Usa un número negativo para restar.</small></label>
+          <label class="form-field"><span>Motivo</span><textarea id="actionReason" rows="3" required maxlength="500" placeholder="Ej. Compra camiseta versión jugador"></textarea></label>
+          <button id="saveActionButton" class="button button--primary button--full" type="submit">Registrar movimiento</button>
+        </form>
+
+        <section class="panel history-panel">
+          <div class="panel-heading"><div><span class="eyebrow">TRAZABILIDAD</span><h3>Historial completo</h3></div></div>
+          <div id="adminClientHistory" class="history-list history-list--admin"></div>
+        </section>
+      </div>
+    </div>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/assets/js/config.example.js"></script>
+  <script src="/assets/js/supabaseClient.js"></script>
+  <script src="/assets/js/admin.js"></script>
+</body>
+</html>
