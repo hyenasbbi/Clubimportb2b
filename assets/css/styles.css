@@ -588,3 +588,26 @@ input::placeholder, textarea::placeholder { color: #5e5e5c; }
 }
   .verification-banner { margin-top: 14px; }
 }
+/* ===== FIX LOGO IMPORTB2B ===== */
+
+.brand-logo {
+  width: 58px !important;
+  height: 58px !important;
+  max-width: 58px !important;
+  max-height: 58px !important;
+  object-fit: contain;
+  display: block;
+  flex: 0 0 58px;
+}
+
+.brand--sidebar .brand-logo {
+  width: 58px !important;
+  height: 58px !important;
+}
+
+.brand-logo--card {
+  width: 64px !important;
+  height: 64px !important;
+  max-width: 64px !important;
+  max-height: 64px !important;
+}
