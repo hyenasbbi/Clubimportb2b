@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <meta name="description" content="Tarjeta privada del Club IMPORTB2B.">
+  <title>Mi tarjeta | Club IMPORTB2B</title>
+  <link rel="stylesheet" href="/assets/css/styles.css">
+</head>
+<body class="client-page">
+  <header class="client-header">
+    <a class="brand" href="/" aria-label="Club IMPORTB2B, inicio">
+      <span class="brand-mark" aria-hidden="true"><i></i>IB</span>
+      <span class="brand-copy"><strong>IMPORTB2B</strong><small>CLUB DE CLIENTES</small></span>
+    </a>
+    <span class="secure-label">ENLACE PRIVADO</span>
+  </header>
+
+  <main class="client-shell">
+    <section id="loadingState" class="state-panel" aria-live="polite">
+      <span class="loader" aria-hidden="true"></span>
+      <h1>Cargando tu tarjeta</h1>
+      <p>Estamos consultando tu información de manera segura.</p>
+    </section>
+
+    <section id="errorState" class="state-panel state-panel--error" hidden>
+      <span class="state-icon" aria-hidden="true">!</span>
+      <h1>No pudimos abrir la tarjeta</h1>
+      <p id="errorMessage">Verifica el enlace e inténtalo nuevamente.</p>
+      <a class="button button--ghost" href="/">Volver al inicio</a>
+    </section>
+
+    <div id="cardContent" hidden>
+      <section class="client-intro">
+        <div>
+          <span class="eyebrow">TU ESPACIO EN IMPORTB2B</span>
+          <h1>Hola, <span id="clientName">Cliente</span></h1>
+          <p>Seguí tu progreso y descubrí cuánto te falta para tu próximo premio.</p>
+        </div>
+        <span id="clientStatus" class="status-badge is-active">Miembro activo</span>
+      </section>
+
+      <section class="membership-card">
+        <div class="membership-card__top">
+          <div>
+            <small id="clubName">CLUB IMPORTB2B</small>
+            <strong>MEMBER CARD</strong>
+          </div>
+          <span class="brand-mark brand-mark--card" aria-hidden="true"><i></i>IB</span>
+        </div>
+        <div class="membership-card__balance">
+          <small>PUNTOS DEL CLUB</small>
+          <strong id="pointsBalance">0</strong>
+          <span>puntos</span>
+        </div>
+        <div class="membership-card__footer">
+          <div><small>CÓDIGO</small><strong id="clientCode">—</strong></div>
+          <div><small>MIEMBRO DESDE</small><strong id="joinedAt">—</strong></div>
+        </div>
+      </section>
+
+      <section class="verification-banner">
+        <strong>¿Qué suma un punto?</strong>
+        <span>Una compra + una historia etiquetando a IMPORTB2B, verificadas por el equipo. El alta inicial no suma puntos.</span>
+      </section>
+
+      <section class="metric-grid metric-grid--client">
+        <article class="metric-card">
+          <span class="metric-card__icon">01</span>
+          <strong id="validActions">0</strong>
+          <small>Compras + historias válidas</small>
+        </article>
+        <article class="metric-card">
+          <span class="metric-card__icon">02</span>
+          <strong id="unlockedRewards">0</strong>
+          <small>Premios desbloqueados</small>
+        </article>
+        <article class="metric-card">
+          <span class="metric-card__icon">03</span>
+          <strong id="deliveredRewards">0</strong>
+          <small>Premios entregados</small>
+        </article>
+      </section>
+
+      <section class="panel progress-panel">
+        <div class="panel-heading">
+          <div>
+            <span class="eyebrow">PRÓXIMO OBJETIVO</span>
+            <h2 id="nextRewardName">Próxima recompensa</h2>
+          </div>
+          <strong id="nextRewardProgress">—</strong>
+        </div>
+        <p id="nextRewardDescription" class="progress-description"></p>
+        <div class="progress-track" role="progressbar" aria-label="Progreso a la próxima recompensa" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <span id="progressBar"></span>
+        </div>
+        <div class="progress-meta">
+          <span id="remainingPoints">Calculando progreso</span>
+          <strong id="progressPercent">0%</strong>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">BENEFICIOS</span>
+            <h2>Recompensas de tu club</h2>
+          </div>
+          <p>Las bloqueadas se muestran en gris para que siempre sepas qué viene después.</p>
+        </div>
+        <div id="rewardsList" class="rewards-grid"></div>
+      </section>
+
+      <section class="content-section">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">ACTIVIDAD</span>
+            <h2>Historial</h2>
+          </div>
+          <p>Últimos movimientos vinculados a tu membresía.</p>
+        </div>
+        <div id="historyList" class="history-list"></div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer site-footer--client">
+    <span>Club IMPORTB2B</span>
+    <span>Tu enlace es personal. No lo compartas públicamente.</span>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/assets/js/config.example.js"></script>
+  <script src="/assets/js/supabaseClient.js"></script>
+  <script src="/assets/js/cliente.js"></script>
+</body>
+</html>
