@@ -573,5 +573,18 @@ input::placeholder, textarea::placeholder { color: #5e5e5c; }
   .detail-stats--three { grid-template-columns: 1fr; }
   .rule-milestone { grid-template-columns: 1fr; }
   .rule-milestone small { grid-column: auto; }
+
+  .brand-logo {
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+  display: block;
+  flex-shrink: 0;
+}
+
+.brand-logo--card {
+  width: 64px;
+  height: 64px;
+}
   .verification-banner { margin-top: 14px; }
 }
