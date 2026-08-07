@@ -7,51 +7,62 @@
     admin: null,
     stats: {},
     clients: [],
-    rewards: [],
-    redemptions: [],
+    rules: [],
+    claims: [],
     selectedClientId: null,
-    toastTimer: null
+    toastTimer: null,
+    searchTimer: null
   };
+
+  const $ = (id) => document.getElementById(id);
 
   const viewTitles = {
     dashboard: "Resumen general",
     clients: "Gestión de clientes",
-    rewards: "Recompensas del club",
-    redemptions: "Gestión de canjes"
+    rewards: "Reglas y premios",
+    claims: "Premios desbloqueados"
+  };
+
+  const clubLabels = {
+    vapers: "Club Vapers",
+    jerseys: "Club Jerseys",
+    perfumes: "Club Perfumes",
+    importb2b: "Club IMPORTB2B"
+  };
+
+  const clubRules = {
+    vapers: "Cada compra + historia verificada suma 1 punto. Se desbloquea un Vaper de regalo cada 3 puntos.",
+    jerseys: "Cada compra + historia verificada suma 1 punto. Premios actuales: 4 puntos y 8 puntos.",
+    perfumes: "Cada compra + historia verificada suma 1 punto. Premios actuales: 3, 6 y 10 puntos.",
+    importb2b: "Cada compra de $30.000 o más + historia verificada suma 1 punto."
   };
 
   const statDefinitions = [
     ["clients_total", "Clientes totales", "Base completa"],
     ["clients_active", "Clientes activos", "Miembros habilitados"],
-    ["purchases_total", "Compras registradas", "Actividad acumulada"],
-    ["stories_total", "Historias etiquetadas", "Actividad acumulada"],
-    ["referrals_total", "Referidos", "Actividad acumulada"],
-    ["credits_in_circulation", "Créditos en circulación", "Saldo total"],
-    ["credits_spent", "Créditos utilizados", "Canjes y descuentos"],
-    ["redemptions_pending", "Canjes pendientes", "Requieren seguimiento"]
+    ["valid_actions_total", "Puntos registrados", "Compras + historias válidas"],
+    ["rewards_pending", "Premios pendientes", "Pendientes de entrega"],
+    ["club_vapers", "Club Vapers", "Clientes vinculados"],
+    ["club_jerseys", "Club Jerseys", "Clientes vinculados"],
+    ["club_perfumes", "Club Perfumes", "Clientes vinculados"],
+    ["club_importb2b", "Club IMPORTB2B", "Artículos varios"]
   ];
 
   const eventLabels = {
     client_created: "Ingreso al club",
     client_updated: "Actualización de datos",
-    purchase: "Compra",
-    instagram_story: "Historia de Instagram",
-    referral: "Referido",
-    manual_adjustment: "Ajuste manual",
-    reward_redemption: "Canje de recompensa",
-    reward_reversal: "Reintegro de canje",
+    verified_purchase_story: "Compra + historia verificada",
+    reward_unlocked: "Premio desbloqueado",
+    reward_delivered: "Premio entregado",
     status_change: "Cambio de estado",
-    other: "Otro movimiento"
+    other: "Movimiento",
+    purchase: "Compra (registro anterior)",
+    instagram_story: "Historia (registro anterior)",
+    referral: "Referido (registro anterior)",
+    manual_adjustment: "Ajuste anterior",
+    reward_redemption: "Canje anterior",
+    reward_reversal: "Reintegro anterior"
   };
-
-  const statusLabels = {
-    pending: "Pendiente",
-    approved: "Aprobado",
-    delivered: "Entregado",
-    cancelled: "Cancelado"
-  };
-
-  const $ = (id) => document.getElementById(id);
 
   function escapeHtml(value) {
     return String(value ?? "")
@@ -76,6 +87,31 @@
     return new Intl.NumberFormat("es-AR").format(Number(value || 0));
   }
 
+  function formatMoney(value) {
+    if (value === null || value === undefined || value === "") return "—";
+    return new Intl.NumberFormat("es-AR", {
+      style: "currency",
+      currency: "ARS",
+      maximumFractionDigits: 0
+    }).format(Number(value));
+  }
+
+  function getLocalDateInputValue() {
+    const date = new Date();
+    const offset = date.getTimezoneOffset();
+    return new Date(date.getTime() - offset * 60000).toISOString().slice(0, 10);
+  }
+
+  function normalizeInstagram(value) {
+    let result = String(value || "").trim();
+    if (!result) return "";
+    result = result.replace(/^https?:\/\/(www\.)?instagram\.com\//i, "");
+    result = result.replace(/^www\.instagram\.com\//i, "");
+    result = result.replace(/^@+/, "");
+    result = result.split(/[/?#]/)[0].trim();
+    return result;
+  }
+
   function getInitials(name) {
     return String(name || "AD")
       .split(/\s+/)
@@ -93,7 +129,7 @@
     window.clearTimeout(state.toastTimer);
     state.toastTimer = window.setTimeout(() => {
       toast.className = "toast";
-    }, 3600);
+    }, 4200);
   }
 
   function setButtonLoading(button, loading, loadingText) {
@@ -111,19 +147,18 @@
   function showView(viewName) {
     document.querySelectorAll(".admin-view").forEach((view) => view.classList.remove("is-active"));
     document.querySelectorAll(".nav-button").forEach((button) => button.classList.remove("is-active"));
-
     $(`view-${viewName}`)?.classList.add("is-active");
     document.querySelector(`.nav-button[data-view="${viewName}"]`)?.classList.add("is-active");
     $("viewTitle").textContent = viewTitles[viewName] || "Panel administrativo";
     document.querySelector(".admin-sidebar")?.classList.remove("is-open");
-    $("menuButton").setAttribute("aria-expanded", "false");
+    $("menuButton")?.setAttribute("aria-expanded", "false");
   }
 
   async function ensureAdminAccess() {
     if (!window.CLUB_CONFIG_READY || !db) {
       $("adminLoading").innerHTML = `
         <strong>Falta configurar Supabase</strong>
-        <span>Edita assets/js/config.example.js y vuelve a publicar.</span>
+        <span>Revisa assets/js/config.example.js y vuelve a publicar.</span>
         <a class="button button--ghost" href="/admin/login">Volver al acceso</a>
       `;
       return false;
@@ -156,10 +191,6 @@
     const { data, error } = await db.rpc("admin_get_stats");
     if (error) throw error;
     state.stats = data || {};
-    renderStats();
-  }
-
-  function renderStats() {
     $("statsGrid").innerHTML = statDefinitions.map(([key, label, note]) => `
       <article class="stat-card">
         <small>${escapeHtml(label)}</small>
@@ -170,14 +201,11 @@
   }
 
   async function loadClients(query) {
-    const { data, error } = await db.rpc("admin_search_clients", {
-      p_query: query || ""
-    });
+    const { data, error } = await db.rpc("admin_search_clients", { p_query: query || "" });
     if (error) throw error;
     state.clients = Array.isArray(data) ? data : [];
     renderClientsTable();
     renderRecentClients();
-    populateClientSelect();
   }
 
   function renderClientsTable() {
@@ -192,15 +220,9 @@
             <small>${escapeHtml(client.instagram_username ? `@${client.instagram_username}` : client.phone || "Sin contacto")}</small>
           </div>
         </td>
+        <td><span class="club-pill club-pill--small">${escapeHtml(clubLabels[client.club_type] || "Club")}</span></td>
         <td><strong>${escapeHtml(client.client_code)}</strong></td>
-        <td>
-          <div class="activity-pills">
-            <span>${formatNumber(client.purchase_count)} compras</span>
-            <span>${formatNumber(client.instagram_story_count)} historias</span>
-            <span>${formatNumber(client.referral_count)} referidos</span>
-          </div>
-        </td>
-        <td><strong>${formatNumber(client.credit_balance)}</strong></td>
+        <td><strong>${formatNumber(client.points)}</strong></td>
         <td><span class="status-badge ${client.is_active ? "is-active" : "is-inactive"}">${client.is_active ? "Activo" : "Inactivo"}</span></td>
         <td>
           <div class="table-actions">
@@ -218,156 +240,120 @@
       <button class="compact-item text-button" type="button" data-open-client="${client.id}">
         <span class="compact-item__main">
           <strong>${escapeHtml(client.full_name)}</strong>
-          <small>${escapeHtml(client.client_code)} · ${formatDate(`${client.joined_at}T12:00:00`, false)}</small>
+          <small>${escapeHtml(clubLabels[client.club_type] || "Club")} · ${formatNumber(client.points)} puntos</small>
         </span>
         <span class="status-badge ${client.is_active ? "is-active" : "is-inactive"}">${client.is_active ? "Activo" : "Inactivo"}</span>
       </button>
     `).join("") : '<div class="empty-state">Todavía no hay clientes.</div>';
   }
 
-  async function loadRewards() {
-    const { data, error } = await db
-      .from("rewards")
-      .select("id, name, description, credits_required, stock, display_order, is_active, created_at, updated_at")
-      .order("display_order", { ascending: true })
-      .order("credits_required", { ascending: true });
-
+  async function loadRules() {
+    const { data, error } = await db.rpc("admin_get_reward_rules");
     if (error) throw error;
-    state.rewards = Array.isArray(data) ? data : [];
-    renderAdminRewards();
-    populateRewardSelect();
+    state.rules = Array.isArray(data) ? data : [];
+    renderRules();
   }
 
-  function renderAdminRewards() {
-    const container = $("adminRewardsList");
-    if (!state.rewards.length) {
-      container.innerHTML = '<div class="empty-state">Todavía no hay recompensas creadas.</div>';
-      return;
-    }
+  function renderRules() {
+    const order = ["vapers", "jerseys", "perfumes", "importb2b"];
+    $("rulesGrid").innerHTML = order.map((clubType) => {
+      const rules = state.rules.filter((rule) => rule.club_type === clubType);
+      const extra = clubType === "importb2b"
+        ? '<div class="rule-condition">Condición adicional: compra mínima de <strong>$30.000</strong>.</div>'
+        : "";
 
-    container.innerHTML = state.rewards.map((reward) => `
-      <article class="admin-reward-item">
-        <div class="admin-reward-item__top">
-          <div>
-            <h3>${escapeHtml(reward.name)}</h3>
-            <span class="status-badge ${reward.is_active ? "is-active" : "is-inactive"}">${reward.is_active ? "Activa" : "Inactiva"}</span>
-          </div>
-          <strong>${formatNumber(reward.credits_required)} créditos</strong>
-        </div>
-        <p>${escapeHtml(reward.description)}</p>
-        <div class="admin-reward-item__meta">
-          <span>${reward.stock === null ? "Stock ilimitado" : `Stock: ${formatNumber(reward.stock)}`}</span>
-          <span>Orden: ${formatNumber(reward.display_order)}</span>
-        </div>
-        <div class="admin-reward-item__actions">
-          <button class="table-button" type="button" data-reward-action="edit" data-reward-id="${reward.id}">Editar</button>
-          <button class="table-button" type="button" data-reward-action="toggle" data-reward-id="${reward.id}">${reward.is_active ? "Desactivar" : "Activar"}</button>
-        </div>
-      </article>
-    `).join("");
-  }
-
-  async function loadRedemptions() {
-    const { data, error } = await db
-      .from("reward_redemptions")
-      .select("id, credits_spent, status, notes, redeemed_at, clients(full_name, client_code), rewards(name)")
-      .order("redeemed_at", { ascending: false });
-
-    if (error) throw error;
-    state.redemptions = Array.isArray(data) ? data : [];
-    renderRedemptions();
-    renderPendingRedemptions();
-  }
-
-  function relationObject(value) {
-    if (Array.isArray(value)) return value[0] || {};
-    return value || {};
-  }
-
-  function renderRedemptions() {
-    const body = $("redemptionsTableBody");
-    $("redemptionsEmpty").hidden = state.redemptions.length > 0;
-
-    body.innerHTML = state.redemptions.map((redemption) => {
-      const client = relationObject(redemption.clients);
-      const reward = relationObject(redemption.rewards);
       return `
-        <tr>
-          <td><div class="table-client"><strong>${escapeHtml(client.full_name || "Cliente eliminado")}</strong><small>${escapeHtml(client.client_code || "—")}</small></div></td>
-          <td>${escapeHtml(reward.name || "Recompensa")}</td>
-          <td>${formatNumber(redemption.credits_spent)}</td>
-          <td>${escapeHtml(formatDate(redemption.redeemed_at, true))}</td>
-          <td>
-            <select id="redemption-status-${redemption.id}" ${redemption.status === "cancelled" ? "disabled" : ""}>
-              ${Object.entries(statusLabels).map(([value, label]) => `<option value="${value}" ${redemption.status === value ? "selected" : ""}>${label}</option>`).join("")}
-            </select>
-          </td>
-          <td><button class="table-button" type="button" data-redemption-action="save" data-redemption-id="${redemption.id}" ${redemption.status === "cancelled" ? "disabled" : ""}>Guardar</button></td>
-        </tr>
+        <article class="panel rule-card">
+          <div class="rule-card__header">
+            <div><span class="eyebrow">${escapeHtml(clubLabels[clubType])}</span><h2>${escapeHtml(clubLabels[clubType])}</h2></div>
+            <span class="club-pill">+1 por validación</span>
+          </div>
+          <p>${escapeHtml(clubRules[clubType])}</p>
+          ${extra}
+          <div class="rule-milestones">
+            ${rules.map((rule) => `
+              <div class="rule-milestone">
+                <strong>${rule.recurring_every ? `Cada ${formatNumber(rule.recurring_every)} puntos` : `${formatNumber(rule.milestone)} puntos`}</strong>
+                <span>${escapeHtml(rule.reward_name)}</span>
+                <small>${escapeHtml(rule.reward_description)}</small>
+              </div>
+            `).join("")}
+          </div>
+        </article>
       `;
     }).join("");
   }
 
-  function renderPendingRedemptions() {
-    const pending = state.redemptions.filter((item) => item.status === "pending").slice(0, 6);
-    $("pendingRedemptions").innerHTML = pending.length ? pending.map((item) => {
-      const client = relationObject(item.clients);
-      const reward = relationObject(item.rewards);
-      return `
-        <div class="compact-item">
-          <span class="compact-item__main">
-            <strong>${escapeHtml(client.full_name || "Cliente")}</strong>
-            <small>${escapeHtml(reward.name || "Recompensa")} · ${formatNumber(item.credits_spent)} créditos</small>
-          </span>
-          <span class="status-badge is-inactive">Pendiente</span>
-        </div>
-      `;
-    }).join("") : '<div class="empty-state">No hay canjes pendientes.</div>';
+  async function loadClaims() {
+    const { data, error } = await db.rpc("admin_get_reward_claims", { p_status: null });
+    if (error) throw error;
+    state.claims = Array.isArray(data) ? data : [];
+    renderClaims();
+    renderPendingClaims();
   }
 
-  function populateClientSelect() {
-    const select = $("redemptionClient");
-    const currentValue = select.value;
-    select.innerHTML = '<option value="">Seleccionar cliente</option>' + state.clients
-      .filter((client) => client.is_active)
-      .map((client) => `<option value="${client.id}">${escapeHtml(client.full_name)} · ${escapeHtml(client.client_code)} · ${formatNumber(client.credit_balance)} créditos</option>`)
-      .join("");
-    select.value = currentValue;
+  function renderClaims() {
+    const body = $("claimsTableBody");
+    $("claimsEmpty").hidden = state.claims.length > 0;
+
+    body.innerHTML = state.claims.map((claim) => `
+      <tr>
+        <td><strong>${escapeHtml(claim.client_name)}</strong><br><small>${escapeHtml(claim.client_code)}</small></td>
+        <td><span class="club-pill club-pill--small">${escapeHtml(clubLabels[claim.club_type] || "Club")}</span></td>
+        <td><strong>${escapeHtml(claim.reward_name)}</strong></td>
+        <td>${formatNumber(claim.milestone)} puntos</td>
+        <td><span class="status-badge ${claim.status === "delivered" ? "is-active" : "is-pending"}">${claim.status === "delivered" ? "Entregado" : "Pendiente"}</span></td>
+        <td>${escapeHtml(formatDate(claim.unlocked_at, false))}</td>
+        <td>
+          <button class="table-button" type="button" data-claim-action="toggle" data-claim-id="${claim.id}">
+            ${claim.status === "delivered" ? "Marcar pendiente" : "Marcar entregado"}
+          </button>
+        </td>
+      </tr>
+    `).join("");
   }
 
-  function populateRewardSelect() {
-    const select = $("redemptionReward");
-    const currentValue = select.value;
-    select.innerHTML = '<option value="">Seleccionar recompensa</option>' + state.rewards
-      .filter((reward) => reward.is_active && (reward.stock === null || reward.stock > 0))
-      .map((reward) => `<option value="${reward.id}">${escapeHtml(reward.name)} · ${formatNumber(reward.credits_required)} créditos</option>`)
-      .join("");
-    select.value = currentValue;
+  function renderPendingClaims() {
+    const pending = state.claims.filter((claim) => claim.status === "pending").slice(0, 6);
+    $("pendingClaims").innerHTML = pending.length ? pending.map((claim) => `
+      <button class="compact-item text-button" type="button" data-go-view="claims">
+        <span class="compact-item__main">
+          <strong>${escapeHtml(claim.client_name)}</strong>
+          <small>${escapeHtml(claim.reward_name)} · ${formatNumber(claim.milestone)} puntos</small>
+        </span>
+        <span class="status-badge is-pending">Pendiente</span>
+      </button>
+    `).join("") : '<div class="empty-state">No hay premios pendientes.</div>';
   }
 
-  async function loadAll() {
-    await Promise.all([
-      loadStats(),
-      loadClients(""),
-      loadRewards(),
-      loadRedemptions()
-    ]);
-  }
-
-  function openClientForm(client) {
+  function resetClientForm() {
     $("clientForm").reset();
+    $("clientId").value = "";
+    $("clientJoinedAt").value = getLocalDateInputValue();
+    $("clientClub").value = "vapers";
+    $("clientFormTitle").textContent = "Crear cliente";
     $("clientFormMessage").textContent = "";
-    $("clientFormMessage").className = "form-message";
-    $("clientId").value = client?.id || "";
-    $("clientFullName").value = client?.full_name || "";
-    $("clientPhone").value = client?.phone || "";
-    $("clientInstagram").value = client?.instagram_username ? `@${client.instagram_username}` : "";
-    $("clientJoinedAt").value = client?.joined_at || new Date().toISOString().slice(0, 10);
-    $("clientNotes").value = client?.internal_notes || "";
-    $("clientFormTitle").textContent = client ? "Editar cliente" : "Crear cliente";
-    $("saveClientButton").textContent = client ? "Guardar cambios" : "Crear cliente";
+  }
+
+  function openCreateClient() {
+    resetClientForm();
     $("clientDialog").showModal();
-    window.setTimeout(() => $("clientFullName").focus(), 50);
+  }
+
+  function openEditClient(client) {
+    $("clientId").value = client.id;
+    $("clientFullName").value = client.full_name || "";
+    $("clientPhone").value = client.phone || "";
+    $("clientInstagram").value = client.instagram_username ? `@${client.instagram_username}` : "";
+    $("clientJoinedAt").value = client.joined_at || getLocalDateInputValue();
+    $("clientClub").value = client.club_type || "importb2b";
+    $("clientNotes").value = client.internal_notes || "";
+    $("clientFormTitle").textContent = "Editar cliente";
+    $("clientFormMessage").textContent = client.points > 0
+      ? "El club no puede cambiarse porque este cliente ya tiene puntos registrados."
+      : "";
+    $("clientClub").disabled = client.points > 0;
+    $("clientDialog").showModal();
   }
 
   async function saveClient(event) {
@@ -376,52 +362,41 @@
     const id = $("clientId").value;
     const fullName = $("clientFullName").value.trim();
     const phone = $("clientPhone").value.trim();
-    const instagram = $("clientInstagram").value.trim();
+    const instagram = normalizeInstagram($("clientInstagram").value);
     const joinedAt = $("clientJoinedAt").value;
     const notes = $("clientNotes").value.trim();
+    const clubType = $("clientClub").disabled
+      ? state.clients.find((client) => client.id === id)?.club_type
+      : $("clientClub").value;
 
-    if (fullName.length < 2 || !joinedAt) {
-      $("clientFormMessage").textContent = "Completa el nombre y la fecha de ingreso.";
-      $("clientFormMessage").className = "form-message is-error";
+    if (fullName.length < 2 || !joinedAt || !clubType) {
+      $("clientFormMessage").textContent = "Completa nombre, club y fecha de ingreso.";
       return;
     }
 
-    setButtonLoading(button, true, id ? "Guardando..." : "Creando...");
-
     try {
-      const functionName = id ? "admin_update_client" : "admin_create_client";
-      const params = id ? {
-        p_client_id: id,
+      setButtonLoading(button, true, "Guardando...");
+      const params = {
         p_full_name: fullName,
         p_phone: phone || null,
         p_instagram_username: instagram || null,
         p_joined_at: joinedAt,
-        p_internal_notes: notes || null
-      } : {
-        p_full_name: fullName,
-        p_phone: phone || null,
-        p_instagram_username: instagram || null,
-        p_joined_at: joinedAt,
-        p_internal_notes: notes || null
+        p_internal_notes: notes || null,
+        p_club_type: clubType
       };
 
-      const { data, error } = await db.rpc(functionName, params);
-      if (error) throw error;
+      const result = id
+        ? await db.rpc("admin_update_client", { p_client_id: id, ...params })
+        : await db.rpc("admin_create_client", params);
 
+      if (result.error) throw result.error;
       $("clientDialog").close();
-      await Promise.all([loadClients($("clientSearch").value.trim()), loadStats()]);
-      showToast(id ? "Cliente actualizado correctamente." : "Cliente creado correctamente.");
-
-      if (!id && data?.id) {
-        state.selectedClientId = data.id;
-        await openClientDetail(data.id);
-      } else if (id && state.selectedClientId === id) {
-        await openClientDetail(id, false);
-      }
+      $("clientClub").disabled = false;
+      await Promise.all([loadClients($("clientSearch").value), loadStats()]);
+      showToast(id ? "Cliente actualizado." : "Cliente creado. El alta inicia con 0 puntos.");
     } catch (error) {
       console.error(error);
-      $("clientFormMessage").textContent = error.message || "No fue posible guardar el cliente.";
-      $("clientFormMessage").className = "form-message is-error";
+      $("clientFormMessage").textContent = error.message || "No se pudo guardar el cliente.";
     } finally {
       setButtonLoading(button, false);
     }
@@ -431,58 +406,70 @@
     return state.clients.find((client) => client.id === state.selectedClientId) || null;
   }
 
-  async function openClientDetail(clientId, showDialog = true) {
+  async function openClient(clientId) {
+    const client = state.clients.find((item) => item.id === clientId);
+    if (!client) return;
     state.selectedClientId = clientId;
-    const client = selectedClient();
-    if (!client) {
-      showToast("No se encontró el cliente.", "error");
-      return;
-    }
-
     renderClientDetail(client);
-    if (showDialog && !$("clientDetailDialog").open) $("clientDetailDialog").showModal();
+    $("clientDetailDialog").showModal();
     await loadClientHistory(clientId);
   }
 
   function renderClientDetail(client) {
     $("detailClientName").textContent = client.full_name;
     $("detailClientCode").textContent = client.client_code;
-    $("detailClientContact").textContent = [client.phone, client.instagram_username ? `@${client.instagram_username}` : ""].filter(Boolean).join(" · ") || "Sin contacto";
-    $("detailPurchases").textContent = formatNumber(client.purchase_count);
-    $("detailStories").textContent = formatNumber(client.instagram_story_count);
-    $("detailReferrals").textContent = formatNumber(client.referral_count);
-    $("detailCredits").textContent = formatNumber(client.credit_balance);
     $("detailClientStatus").textContent = client.is_active ? "Activo" : "Inactivo";
     $("detailClientStatus").className = `status-badge ${client.is_active ? "is-active" : "is-inactive"}`;
+    $("detailClientClub").textContent = clubLabels[client.club_type] || "Club";
+    $("detailClientContact").textContent = [
+      client.phone,
+      client.instagram_username ? `@${client.instagram_username}` : ""
+    ].filter(Boolean).join(" · ") || "Sin contacto";
+    $("detailPoints").textContent = formatNumber(client.points);
+    $("detailValidActions").textContent = formatNumber(client.points);
+    $("detailPendingRewards").textContent = formatNumber(
+      state.claims.filter((claim) => claim.client_id === client.id && claim.status === "pending").length
+    );
     $("toggleSelectedClient").textContent = client.is_active ? "Desactivar" : "Reactivar";
-    $("saveActionButton").disabled = !client.is_active;
+    $("actionClubRule").textContent = clubRules[client.club_type] || "";
+
+    const amountField = $("purchaseAmountField");
+    const amountInput = $("actionPurchaseAmount");
+    const isImport = client.club_type === "importb2b";
+    amountField.hidden = !isImport;
+    amountInput.required = isImport;
+    amountInput.value = "";
+    $("actionObservation").value = "";
   }
 
   async function loadClientHistory(clientId) {
     $("adminClientHistory").innerHTML = '<div class="empty-state">Cargando historial...</div>';
     const { data, error } = await db.rpc("admin_get_client_history", { p_client_id: clientId });
     if (error) {
-      $("adminClientHistory").innerHTML = `<div class="empty-state">${escapeHtml(error.message)}</div>`;
+      console.error(error);
+      $("adminClientHistory").innerHTML = '<div class="empty-state">No se pudo cargar el historial.</div>';
       return;
     }
 
     const history = Array.isArray(data) ? data : [];
     $("adminClientHistory").innerHTML = history.length ? history.map((item) => {
-      const amount = Number(item.credit_amount || 0);
-      const amountClass = amount > 0 ? "is-positive" : amount < 0 ? "is-negative" : "is-neutral";
-      const amountLabel = amount > 0 ? `+${amount}` : String(amount);
+      const pointAdded = Number(item.metadata?.point_added || 0);
+      const amount = item.metadata?.purchase_amount;
+      const observation = item.metadata?.observation;
       return `
         <article class="history-item">
           <div class="history-dot" aria-hidden="true"></div>
           <div class="history-item__content">
             <div class="history-item__header">
               <strong>${escapeHtml(eventLabels[item.event_type] || "Movimiento")}</strong>
-              ${amount !== 0 ? `<span class="credit-change ${amountClass}">${escapeHtml(amountLabel)} créditos</span>` : ""}
+              ${pointAdded ? '<span class="point-change">+1 punto</span>' : ""}
             </div>
             <p>${escapeHtml(item.description)}</p>
+            ${amount ? `<small class="history-extra">Monto: ${escapeHtml(formatMoney(amount))}</small>` : ""}
+            ${observation ? `<small class="history-extra">${escapeHtml(observation)}</small>` : ""}
             <div class="history-item__meta">
               <time>${escapeHtml(formatDate(item.created_at, true))}</time>
-              <span>${escapeHtml(item.admin_name || "Administrador")}${item.balance_after !== null && item.balance_after !== undefined ? ` · Saldo ${formatNumber(item.balance_after)}` : ""}</span>
+              <span>${escapeHtml(item.admin_name || "Administrador")}</span>
             </div>
           </div>
         </article>
@@ -490,260 +477,124 @@
     }).join("") : '<div class="empty-state">Todavía no hay movimientos registrados.</div>';
   }
 
-  async function saveAction(event) {
+  async function registerVerifiedPurchase(event) {
     event.preventDefault();
     const client = selectedClient();
     if (!client) return;
 
-    const actionType = $("actionType").value;
-    const credits = Number.parseInt($("actionCredits").value, 10);
-    const reason = $("actionReason").value.trim();
     const button = $("saveActionButton");
+    const rawAmount = $("actionPurchaseAmount").value.trim();
+    const amount = rawAmount ? Number(rawAmount) : null;
+    const observation = $("actionObservation").value.trim();
 
-    if (!Number.isInteger(credits) || reason.length < 2) {
-      showToast("Indica una cantidad válida y el motivo.", "error");
+    if (client.club_type === "importb2b" && (!Number.isFinite(amount) || amount < 30000)) {
+      showToast("Club IMPORTB2B requiere una compra mínima de $30.000.", "error");
       return;
     }
 
-    setButtonLoading(button, true, "Registrando...");
     try {
-      const { error } = await db.rpc("admin_register_action", {
+      setButtonLoading(button, true, "Registrando...");
+      const { data, error } = await db.rpc("admin_register_verified_purchase", {
         p_client_id: client.id,
-        p_action_type: actionType,
-        p_credit_amount: credits,
-        p_reason: reason
+        p_purchase_amount: amount,
+        p_observation: observation || null
       });
       if (error) throw error;
 
-      $("actionForm").reset();
-      $("actionCredits").value = "0";
-      await Promise.all([loadClients($("clientSearch").value.trim()), loadStats()]);
-      const refreshedClient = selectedClient();
-      if (refreshedClient) renderClientDetail(refreshedClient);
+      await Promise.all([
+        loadClients($("clientSearch").value),
+        loadStats(),
+        loadClaims()
+      ]);
+
+      const refreshed = state.clients.find((item) => item.id === client.id);
+      if (refreshed) renderClientDetail(refreshed);
       await loadClientHistory(client.id);
-      showToast("Movimiento registrado correctamente.");
+
+      if (data?.reward_unlocked) {
+        showToast(`+1 punto registrado. Premio desbloqueado: ${data.reward_unlocked}`);
+      } else {
+        showToast("Compra + historia verificadas. +1 punto registrado.");
+      }
     } catch (error) {
       console.error(error);
-      showToast(error.message || "No fue posible registrar el movimiento.", "error");
+      showToast(error.message || "No se pudo registrar el punto.", "error");
     } finally {
       setButtonLoading(button, false);
     }
   }
 
-  async function toggleSelectedClient() {
-    const client = selectedClient();
-    if (!client) return;
-    const nextStatus = !client.is_active;
-    const verb = nextStatus ? "reactivar" : "desactivar";
-    if (!window.confirm(`¿Confirmas que deseas ${verb} a ${client.full_name}?`)) return;
-
+  async function copyClientLink(client) {
+    if (!client?.access_token) return;
+    const link = `${window.location.origin}/c/${encodeURIComponent(client.access_token)}`;
     try {
-      const { error } = await db.rpc("admin_set_client_status", {
-        p_client_id: client.id,
-        p_is_active: nextStatus
-      });
-      if (error) throw error;
-      await Promise.all([loadClients($("clientSearch").value.trim()), loadStats()]);
-      const refreshedClient = selectedClient();
-      if (refreshedClient) renderClientDetail(refreshedClient);
-      await loadClientHistory(client.id);
-      showToast(`Cliente ${nextStatus ? "reactivado" : "desactivado"}.`);
-    } catch (error) {
-      console.error(error);
-      showToast(error.message || "No fue posible cambiar el estado.", "error");
+      await navigator.clipboard.writeText(link);
+      showToast("Enlace privado copiado.");
+    } catch (_) {
+      window.prompt("Copia el enlace del cliente:", link);
     }
   }
 
-  async function deleteSelectedClient() {
+  async function toggleClientStatus() {
     const client = selectedClient();
     if (!client) return;
-    const confirmation = window.confirm(
-      `Vas a eliminar definitivamente a ${client.full_name}, junto con su historial y movimientos. Esta acción no se puede deshacer. ¿Continuar?`
-    );
-    if (!confirmation) return;
+    try {
+      const { error } = await db.rpc("admin_set_client_status", {
+        p_client_id: client.id,
+        p_is_active: !client.is_active
+      });
+      if (error) throw error;
+      await Promise.all([loadClients($("clientSearch").value), loadStats()]);
+      const refreshed = state.clients.find((item) => item.id === client.id);
+      if (refreshed) renderClientDetail(refreshed);
+      await loadClientHistory(client.id);
+      showToast(refreshed?.is_active ? "Cliente reactivado." : "Cliente desactivado.");
+    } catch (error) {
+      console.error(error);
+      showToast(error.message || "No se pudo cambiar el estado.", "error");
+    }
+  }
+
+  async function deleteClient() {
+    const client = selectedClient();
+    if (!client) return;
+    if (!window.confirm(`¿Eliminar definitivamente a ${client.full_name}? Esta acción también elimina sus puntos y premios.`)) return;
 
     try {
       const { error } = await db.rpc("admin_delete_client", { p_client_id: client.id });
       if (error) throw error;
       $("clientDetailDialog").close();
       state.selectedClientId = null;
-      await Promise.all([loadClients($("clientSearch").value.trim()), loadStats(), loadRedemptions()]);
-      showToast("Cliente eliminado definitivamente.");
+      await Promise.all([loadClients($("clientSearch").value), loadStats(), loadClaims()]);
+      showToast("Cliente eliminado.");
     } catch (error) {
       console.error(error);
-      showToast(error.message || "No fue posible eliminar el cliente.", "error");
+      showToast(error.message || "No se pudo eliminar el cliente.", "error");
     }
   }
 
-  async function copyText(text) {
-    if (navigator.clipboard && window.isSecureContext) {
-      await navigator.clipboard.writeText(text);
-      return;
-    }
-    const textarea = document.createElement("textarea");
-    textarea.value = text;
-    textarea.style.position = "fixed";
-    textarea.style.opacity = "0";
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand("copy");
-    textarea.remove();
-  }
-
-  async function copyClientLink(clientId) {
-    const client = state.clients.find((item) => item.id === clientId);
-    if (!client) return;
-    try {
-      await copyText(`${window.location.origin}/c/${client.access_token}`);
-      showToast("Enlace privado copiado.");
-    } catch (error) {
-      console.error(error);
-      showToast("No fue posible copiar el enlace.", "error");
-    }
-  }
-
-  function resetRewardForm() {
-    $("rewardForm").reset();
-    $("rewardId").value = "";
-    $("rewardOrder").value = "0";
-    $("rewardActive").checked = true;
-    $("rewardFormTitle").textContent = "Nueva recompensa";
-    $("cancelRewardEdit").hidden = true;
-  }
-
-  function editReward(rewardId) {
-    const reward = state.rewards.find((item) => item.id === rewardId);
-    if (!reward) return;
-    $("rewardId").value = reward.id;
-    $("rewardName").value = reward.name;
-    $("rewardDescription").value = reward.description;
-    $("rewardCredits").value = reward.credits_required;
-    $("rewardStock").value = reward.stock === null ? "" : reward.stock;
-    $("rewardOrder").value = reward.display_order;
-    $("rewardActive").checked = reward.is_active;
-    $("rewardFormTitle").textContent = "Editar recompensa";
-    $("cancelRewardEdit").hidden = false;
-    $("rewardName").focus();
-  }
-
-  async function saveReward(event) {
-    event.preventDefault();
-    const id = $("rewardId").value;
-    const name = $("rewardName").value.trim();
-    const description = $("rewardDescription").value.trim();
-    const credits = Number.parseInt($("rewardCredits").value, 10);
-    const stockRaw = $("rewardStock").value.trim();
-    const stock = stockRaw === "" ? null : Number.parseInt(stockRaw, 10);
-    const order = Number.parseInt($("rewardOrder").value || "0", 10);
-    const isActive = $("rewardActive").checked;
-    const submitButton = event.submitter;
-
-    if (name.length < 2 || description.length < 2 || !Number.isInteger(credits) || credits <= 0 || (stock !== null && (!Number.isInteger(stock) || stock < 0))) {
-      showToast("Revisa los datos de la recompensa.", "error");
-      return;
-    }
-
-    setButtonLoading(submitButton, true, "Guardando...");
-    const payload = {
-      name,
-      description,
-      credits_required: credits,
-      stock,
-      display_order: Number.isInteger(order) && order >= 0 ? order : 0,
-      is_active: isActive
-    };
+  async function toggleClaim(claimId) {
+    const claim = state.claims.find((item) => item.id === claimId);
+    if (!claim) return;
+    const nextStatus = claim.status === "delivered" ? "pending" : "delivered";
 
     try {
-      let result;
-      if (id) {
-        result = await db.from("rewards").update(payload).eq("id", id);
-      } else {
-        result = await db.from("rewards").insert({ ...payload, created_by: state.user.id });
+      const { error } = await db.rpc("admin_update_reward_claim_status", {
+        p_claim_id: claim.id,
+        p_status: nextStatus,
+        p_notes: claim.notes || null
+      });
+      if (error) throw error;
+      await Promise.all([loadClaims(), loadStats()]);
+      if (state.selectedClientId) {
+        const client = selectedClient();
+        if (client) renderClientDetail(client);
+        await loadClientHistory(state.selectedClientId);
       }
-      if (result.error) throw result.error;
-
-      resetRewardForm();
-      await Promise.all([loadRewards(), loadStats()]);
-      showToast(id ? "Recompensa actualizada." : "Recompensa creada.");
+      showToast(nextStatus === "delivered" ? "Premio marcado como entregado." : "Premio vuelto a pendiente.");
     } catch (error) {
       console.error(error);
-      showToast(error.message || "No fue posible guardar la recompensa.", "error");
-    } finally {
-      setButtonLoading(submitButton, false);
-    }
-  }
-
-  async function toggleReward(rewardId) {
-    const reward = state.rewards.find((item) => item.id === rewardId);
-    if (!reward) return;
-    try {
-      const { error } = await db.from("rewards").update({ is_active: !reward.is_active }).eq("id", reward.id);
-      if (error) throw error;
-      await Promise.all([loadRewards(), loadStats()]);
-      showToast(`Recompensa ${reward.is_active ? "desactivada" : "activada"}.`);
-    } catch (error) {
-      console.error(error);
-      showToast(error.message || "No fue posible actualizar la recompensa.", "error");
-    }
-  }
-
-  async function saveRedemption(event) {
-    event.preventDefault();
-    const clientId = $("redemptionClient").value;
-    const rewardId = $("redemptionReward").value;
-    const notes = $("redemptionNotes").value.trim();
-    const button = event.submitter;
-
-    if (!clientId || !rewardId) {
-      showToast("Selecciona el cliente y la recompensa.", "error");
-      return;
-    }
-
-    setButtonLoading(button, true, "Registrando...");
-    try {
-      const { error } = await db.rpc("admin_redeem_reward", {
-        p_client_id: clientId,
-        p_reward_id: rewardId,
-        p_notes: notes || null
-      });
-      if (error) throw error;
-
-      $("redemptionForm").reset();
-      await Promise.all([loadClients(""), loadRewards(), loadRedemptions(), loadStats()]);
-      showToast("Canje registrado y créditos descontados.");
-    } catch (error) {
-      console.error(error);
-      showToast(error.message || "No fue posible registrar el canje.", "error");
-    } finally {
-      setButtonLoading(button, false);
-    }
-  }
-
-  async function updateRedemptionStatus(redemptionId, button) {
-    const select = $(`redemption-status-${redemptionId}`);
-    const status = select?.value;
-    if (!status) return;
-
-    if (status === "cancelled" && !window.confirm("Al cancelar el canje se reintegrarán los créditos y el stock. ¿Continuar?")) {
-      await loadRedemptions();
-      return;
-    }
-
-    setButtonLoading(button, true, "Guardando...");
-    try {
-      const { error } = await db.rpc("admin_update_redemption_status", {
-        p_redemption_id: redemptionId,
-        p_status: status,
-        p_notes: null
-      });
-      if (error) throw error;
-      await Promise.all([loadRedemptions(), loadClients(""), loadRewards(), loadStats()]);
-      showToast("Estado del canje actualizado.");
-    } catch (error) {
-      console.error(error);
-      showToast(error.message || "No fue posible actualizar el canje.", "error");
-    } finally {
-      setButtonLoading(button, false);
+      showToast(error.message || "No se pudo actualizar el premio.", "error");
     }
   }
 
@@ -752,91 +603,77 @@
       button.addEventListener("click", () => showView(button.dataset.view));
     });
 
-    document.querySelectorAll("[data-go-view]").forEach((button) => {
-      button.addEventListener("click", () => showView(button.dataset.goView));
+    document.addEventListener("click", (event) => {
+      const goView = event.target.closest("[data-go-view]");
+      if (goView) showView(goView.dataset.goView);
+
+      const openButton = event.target.closest("[data-open-client]");
+      if (openButton) openClient(openButton.dataset.openClient);
+
+      const clientButton = event.target.closest("[data-client-action]");
+      if (clientButton) {
+        const client = state.clients.find((item) => item.id === clientButton.dataset.clientId);
+        if (!client) return;
+        if (clientButton.dataset.clientAction === "open") openClient(client.id);
+        if (clientButton.dataset.clientAction === "copy") copyClientLink(client);
+      }
+
+      const claimButton = event.target.closest("[data-claim-action]");
+      if (claimButton?.dataset.claimAction === "toggle") toggleClaim(claimButton.dataset.claimId);
+
+      const closeButton = event.target.closest("[data-close-dialog]");
+      if (closeButton) {
+        const dialog = $(closeButton.dataset.closeDialog);
+        if (dialog?.open) dialog.close();
+        if (dialog?.id === "clientDialog") $("clientClub").disabled = false;
+      }
+    });
+
+    $("quickCreateButton").addEventListener("click", openCreateClient);
+    $("createClientButton").addEventListener("click", openCreateClient);
+    $("clientForm").addEventListener("submit", saveClient);
+    $("actionForm").addEventListener("submit", registerVerifiedPurchase);
+
+    $("copyClientLink").addEventListener("click", () => copyClientLink(selectedClient()));
+    $("editSelectedClient").addEventListener("click", () => {
+      const client = selectedClient();
+      if (!client) return;
+      $("clientDetailDialog").close();
+      openEditClient(client);
+    });
+    $("toggleSelectedClient").addEventListener("click", toggleClientStatus);
+    $("deleteSelectedClient").addEventListener("click", deleteClient);
+
+    $("clientSearch").addEventListener("input", () => {
+      window.clearTimeout(state.searchTimer);
+      state.searchTimer = window.setTimeout(async () => {
+        try {
+          await loadClients($("clientSearch").value);
+        } catch (error) {
+          console.error(error);
+          showToast("No se pudo realizar la búsqueda.", "error");
+        }
+      }, 250);
+    });
+
+    $("clientInstagram").addEventListener("blur", () => {
+      const normalized = normalizeInstagram($("clientInstagram").value);
+      $("clientInstagram").value = normalized ? `@${normalized}` : "";
     });
 
     $("menuButton").addEventListener("click", () => {
       const sidebar = document.querySelector(".admin-sidebar");
-      const isOpen = sidebar.classList.toggle("is-open");
-      $("menuButton").setAttribute("aria-expanded", String(isOpen));
-    });
-
-    $("quickCreateButton").addEventListener("click", () => openClientForm(null));
-    $("createClientButton").addEventListener("click", () => openClientForm(null));
-    $("clientForm").addEventListener("submit", saveClient);
-    $("actionForm").addEventListener("submit", saveAction);
-    $("rewardForm").addEventListener("submit", saveReward);
-    $("redemptionForm").addEventListener("submit", saveRedemption);
-    $("cancelRewardEdit").addEventListener("click", resetRewardForm);
-
-    document.querySelectorAll("[data-close-dialog]").forEach((button) => {
-      button.addEventListener("click", () => $(button.dataset.closeDialog)?.close());
-    });
-
-    [$("clientDialog"), $("clientDetailDialog")].forEach((dialog) => {
-      dialog.addEventListener("click", (event) => {
-        if (event.target === dialog) dialog.close();
-      });
-    });
-
-    let searchTimer;
-    $("clientSearch").addEventListener("input", () => {
-      window.clearTimeout(searchTimer);
-      searchTimer = window.setTimeout(async () => {
-        try {
-          await loadClients($("clientSearch").value.trim());
-        } catch (error) {
-          showToast(error.message || "Error al buscar clientes.", "error");
-        }
-      }, 280);
-    });
-
-    $("clientsTableBody").addEventListener("click", (event) => {
-      const button = event.target.closest("[data-client-action]");
-      if (!button) return;
-      if (button.dataset.clientAction === "open") openClientDetail(button.dataset.clientId);
-      if (button.dataset.clientAction === "copy") copyClientLink(button.dataset.clientId);
-    });
-
-    $("recentClients").addEventListener("click", (event) => {
-      const button = event.target.closest("[data-open-client]");
-      if (button) openClientDetail(button.dataset.openClient);
-    });
-
-    $("copyClientLink").addEventListener("click", () => copyClientLink(state.selectedClientId));
-    $("editSelectedClient").addEventListener("click", () => {
-      const client = selectedClient();
-      if (client) openClientForm(client);
-    });
-    $("toggleSelectedClient").addEventListener("click", toggleSelectedClient);
-    $("deleteSelectedClient").addEventListener("click", deleteSelectedClient);
-
-    $("adminRewardsList").addEventListener("click", (event) => {
-      const button = event.target.closest("[data-reward-action]");
-      if (!button) return;
-      if (button.dataset.rewardAction === "edit") editReward(button.dataset.rewardId);
-      if (button.dataset.rewardAction === "toggle") toggleReward(button.dataset.rewardId);
-    });
-
-    $("redemptionsTableBody").addEventListener("click", (event) => {
-      const button = event.target.closest("[data-redemption-action]");
-      if (button?.dataset.redemptionAction === "save") {
-        updateRedemptionStatus(button.dataset.redemptionId, button);
-      }
+      const open = sidebar.classList.toggle("is-open");
+      $("menuButton").setAttribute("aria-expanded", String(open));
     });
 
     $("logoutButton").addEventListener("click", async () => {
       await db.auth.signOut();
       window.location.replace("/admin/login");
     });
-
-    db.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_OUT") window.location.replace("/admin/login");
-    });
   }
 
-  async function initialize() {
+  async function init() {
     try {
       const allowed = await ensureAdminAccess();
       if (!allowed) return;
@@ -846,19 +683,19 @@
       $("adminInitials").textContent = getInitials(state.admin.full_name);
 
       bindEvents();
-      await loadAll();
+      await Promise.all([loadStats(), loadClients(""), loadRules(), loadClaims()]);
 
       $("adminLoading").hidden = true;
       $("adminApp").hidden = false;
     } catch (error) {
       console.error(error);
       $("adminLoading").innerHTML = `
-        <strong>No fue posible cargar el panel</strong>
-        <span>${escapeHtml(error.message || "Error desconocido")}</span>
-        <a class="button button--ghost" href="/admin/login">Volver al acceso</a>
+        <strong>No pudimos cargar el panel</strong>
+        <span>${escapeHtml(error.message || "Error inesperado")}</span>
+        <button class="button button--ghost" type="button" onclick="location.reload()">Reintentar</button>
       `;
     }
   }
 
-  initialize();
+  init();
 })();
