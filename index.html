@@ -3,240 +3,79 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="robots" content="noindex, nofollow, noarchive">
-  <title>Panel administrativo | Club IMPORTB2B</title>
+  <meta name="description" content="Club de fidelización de clientes IMPORTB2B.">
+  <title>Club IMPORTB2B</title>
   <link rel="icon" type="image/png" href="/assets/icons/favicon-32.png">
   <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="stylesheet" href="/assets/css/styles.css">
-  <link rel="stylesheet" href="/assets/css/multiclub-v3.css">
 </head>
-<body class="admin-page">
-  <div id="adminLoading" class="admin-gate">
-    <span class="loader" aria-hidden="true"></span>
-    <strong>Validando acceso administrativo</strong>
-  </div>
-
-  <div id="adminApp" class="admin-app" hidden>
-    <aside class="admin-sidebar">
-      <a class="brand brand--sidebar" href="/">
-        <img src="/assets/logo-importb2b.png"
+<body class="landing-page">
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Club IMPORTB2B, inicio">
+      <img src="/assets/logo-importb2b.png"
      class="brand-logo"
      alt="IMPORTB2B"
      width="58"
      height="58"
      style="width:58px;height:58px;max-width:58px;max-height:58px;object-fit:contain;">
-        <span class="brand-copy"><strong>IMPORTB2B</strong><small>ADMIN CLUB</small></span>
-      </a>
+      <span class="brand-copy"><strong>IMPORTB2B</strong><small>CLUB DE CLIENTES</small></span>
+    </a>
+    <a class="button button--ghost button--small" href="/admin/login">Panel administrativo</a>
+  </header>
 
-      <nav class="admin-nav" aria-label="Secciones administrativas">
-        <button class="nav-button is-active" type="button" data-view="dashboard"><span>01</span>Resumen</button>
-        <button class="nav-button" type="button" data-view="clients"><span>02</span>Clientes</button>
-        <button class="nav-button" type="button" data-view="rewards"><span>03</span>Reglas y premios</button>
-        <button class="nav-button" type="button" data-view="claims"><span>04</span>Premios</button>
-      </nav>
-
-      <div class="sidebar-footer">
-        <div class="admin-identity">
-          <span id="adminInitials">AD</span>
-          <div><strong id="adminName">Administrador</strong><small id="adminEmail">—</small></div>
-        </div>
-        <button id="logoutButton" class="button button--ghost button--full" type="button">Cerrar sesión</button>
-      </div>
-    </aside>
-
-    <div class="admin-main">
-      <header class="admin-topbar">
-        <button id="menuButton" class="menu-button" type="button" aria-label="Abrir menú" aria-expanded="false">☰</button>
-        <div>
-          <span class="eyebrow">CLUB IMPORTB2B</span>
-          <h1 id="viewTitle">Resumen general</h1>
-        </div>
-        <button id="quickCreateButton" class="button button--primary" type="button">+ Nuevo cliente</button>
-      </header>
-
-      <main class="admin-content">
-        <section id="view-dashboard" class="admin-view is-active">
-          <div id="statsGrid" class="stats-grid"></div>
-          <div class="dashboard-grid">
-            <section class="panel">
-              <div class="panel-heading">
-                <div><span class="eyebrow">ÚLTIMOS REGISTROS</span><h2>Clientes recientes</h2></div>
-                <button class="text-button" type="button" data-go-view="clients">Ver todos</button>
-              </div>
-              <div id="recentClients" class="compact-list"></div>
-            </section>
-            <section class="panel">
-              <div class="panel-heading">
-                <div><span class="eyebrow">PENDIENTES</span><h2>Premios por entregar</h2></div>
-                <button class="text-button" type="button" data-go-view="claims">Gestionar</button>
-              </div>
-              <div id="pendingClaims" class="compact-list"></div>
-            </section>
-          </div>
-        </section>
-
-        <section id="view-clients" class="admin-view">
-          <div class="toolbar">
-            <label class="search-field">
-              <span aria-hidden="true">⌕</span>
-              <input id="clientSearch" type="search" placeholder="Buscar por nombre, teléfono, Instagram o código">
-            </label>
-            <button id="createClientButton" class="button button--primary" type="button">+ Crear cliente</button>
-          </div>
-
-          <section class="panel table-panel">
-            <div class="table-wrap">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Cliente</th>
-                    <th>Clubes</th>
-                    <th>Código</th>
-                    <th>Progreso</th>
-                    <th>Estado</th>
-                    <th aria-label="Acciones"></th>
-                  </tr>
-                </thead>
-                <tbody id="clientsTableBody"></tbody>
-              </table>
+  <main>
+    <section class="hero-section">
+      <div class="hero-glow" aria-hidden="true"></div>
+      <div class="hero-content">
+        <span class="eyebrow">BENEFICIOS QUE CRECEN CON VOS</span>
+        <h1>Tu fidelidad merece <em>recompensas reales.</em></h1>
+        <p>En el Club IMPORTB2B, cada compra con historia etiquetada y verificada suma progreso hacia premios reales.</p>
+        <div class="hero-actions">
+          <div class="notice-card">
+            <span class="notice-card__icon" aria-hidden="true">◆</span>
+            <div>
+              <strong>Acceso mediante enlace privado</strong>
+              <p>Usa el enlace personal enviado por IMPORTB2B para consultar tu tarjeta.</p>
             </div>
-            <div id="clientsEmpty" class="empty-state" hidden>No se encontraron clientes.</div>
-          </section>
-        </section>
-
-        <section id="view-rewards" class="admin-view">
-          <section class="panel rules-intro">
-            <span class="eyebrow">LÓGICA DEL CLUB</span>
-            <h2>Una sola regla para sumar</h2>
-            <p><strong>1 punto = compra + historia etiquetando a IMPORTB2B, ya verificada por vos.</strong> El alta inicial del cliente no suma. No hay puntos pendientes ni referidos.</p>
-          </section>
-          <div id="rulesGrid" class="rules-grid"></div>
-        </section>
-
-        <section id="view-claims" class="admin-view">
-          <section class="panel table-panel">
-            <div class="panel-heading">
-              <div><span class="eyebrow">SEGUIMIENTO</span><h2>Premios desbloqueados</h2></div>
-            </div>
-            <div class="table-wrap">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Cliente</th>
-                    <th>Club</th>
-                    <th>Premio</th>
-                    <th>Meta</th>
-                    <th>Estado</th>
-                    <th>Fecha</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody id="claimsTableBody"></tbody>
-              </table>
-            </div>
-            <div id="claimsEmpty" class="empty-state" hidden>No hay premios desbloqueados todavía.</div>
-          </section>
-        </section>
-      </main>
-    </div>
-  </div>
-
-  <dialog id="clientDialog" class="modal">
-    <form id="clientForm" class="modal-card" novalidate>
-      <div class="modal-heading">
-        <div><span class="eyebrow">CLIENTE</span><h2 id="clientFormTitle">Crear cliente</h2></div>
-        <button class="icon-button" type="button" data-close-dialog="clientDialog" aria-label="Cerrar">×</button>
-      </div>
-
-      <div class="verification-note">
-        <strong>Alta verificada</strong>
-        <span>Registrá al cliente únicamente después de recibir la notificación de Instagram o una captura válida de su historia. El alta no suma punto: el progreso comienza con la siguiente compra + historia verificada.</span>
-      </div>
-
-      <input id="clientId" type="hidden">
-      <label class="form-field"><span>Nombre completo</span><input id="clientFullName" required maxlength="160" placeholder="Nombre y apellido"></label>
-      <label class="form-field"><span>Club inicial</span>
-        <select id="clientClub" required>
-          <option value="vapers">Club Vapers</option>
-          <option value="jerseys">Club Jerseys</option>
-          <option value="perfumes">Club Perfumes</option>
-          <option value="importb2b">Club IMPORTB2B · artículos varios</option>
-        </select>
-        <small>Este será el primer club. Después podés agregar otros desde la ficha.</small>
-      </label>
-      <div class="form-grid">
-        <label class="form-field"><span>Teléfono</span><input id="clientPhone" maxlength="60" placeholder="+54 9 ..."></label>
-        <label class="form-field"><span>Instagram</span><input id="clientInstagram" maxlength="160" placeholder="@usuario o enlace de Instagram"></label>
-      </div>
-      <label class="form-field"><span>Fecha de ingreso</span><input id="clientJoinedAt" type="date" required></label>
-      <label class="form-field"><span>Notas internas</span><textarea id="clientNotes" rows="4" maxlength="1000" placeholder="Información visible solo para administradores"></textarea></label>
-      <p id="clientFormMessage" class="form-message" aria-live="polite"></p>
-      <div class="form-actions">
-        <button class="button button--ghost" type="button" data-close-dialog="clientDialog">Cancelar</button>
-        <button id="saveClientButton" class="button button--primary" type="submit">Guardar cliente</button>
-      </div>
-    </form>
-  </dialog>
-
-  <dialog id="clientDetailDialog" class="modal modal--wide">
-    <div class="modal-card modal-card--wide">
-      <div class="modal-heading">
-        <div><span class="eyebrow">FICHA DEL CLIENTE</span><h2 id="detailClientName">Cliente</h2></div>
-        <button class="icon-button" type="button" data-close-dialog="clientDetailDialog" aria-label="Cerrar">×</button>
-      </div>
-
-      <div class="client-detail-header">
-        <div class="client-detail-meta">
-          <span id="detailClientStatus" class="status-badge is-active">Activo</span>
-          <span id="detailClientClub" class="club-pill">Club</span>
-          <strong id="detailClientCode">—</strong>
-          <span id="detailClientContact">—</span>
-        </div>
-        <div class="client-detail-actions">
-          <button id="copyClientLink" class="button button--ghost" type="button">Copiar enlace</button>
-          <button id="editSelectedClient" class="button button--ghost" type="button">Editar</button>
-          <button id="toggleSelectedClient" class="button button--ghost" type="button">Desactivar</button>
-          <button id="deleteSelectedClient" class="button button--danger" type="button">Eliminar</button>
-        </div>
-      </div>
-
-      <div class="detail-stats detail-stats--three">
-        <article><small>Puntos totales</small><strong id="detailPoints">0</strong></article>
-        <article><small>Compras + historias válidas</small><strong id="detailValidActions">0</strong></article>
-        <article><small>Premios pendientes</small><strong id="detailPendingRewards">0</strong></article>
-      </div>
-
-      <div class="detail-grid">
-        <form id="actionForm" class="panel form-panel form-panel--compact" novalidate>
-          <div class="panel-heading"><div><span class="eyebrow">+1 PUNTO</span><h3>Registrar compra + historia</h3></div></div>
-          <div class="verification-note verification-note--compact">
-            <strong>Solo registrá cuando ya esté verificado</strong>
-            <span>Esta acción suma inmediatamente 1 punto. No existe estado pendiente.</span>
           </div>
-          <p id="actionClubRule" class="club-rule-text"></p>
-          <label id="purchaseAmountField" class="form-field" hidden>
-            <span>Monto de la compra</span>
-            <input id="actionPurchaseAmount" type="number" min="30000" step="1" inputmode="numeric" placeholder="30000">
-            <small>Club IMPORTB2B: la compra debe ser de $30.000 o más.</small>
-          </label>
-          <label class="form-field"><span>Observación (opcional)</span><textarea id="actionObservation" rows="3" maxlength="500" placeholder="Ej. Vaper X, camiseta Barcelona, termo Stanley..."></textarea></label>
-          <button id="saveActionButton" class="button button--primary button--full" type="submit">Confirmar compra + historia · +1 punto</button>
-        </form>
-
-        <section class="panel history-panel">
-          <div class="panel-heading"><div><span class="eyebrow">TRAZABILIDAD</span><h3>Historial completo</h3></div></div>
-          <div id="adminClientHistory" class="history-list history-list--admin"></div>
-        </section>
+        </div>
       </div>
-    </div>
-  </dialog>
 
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+      <div class="hero-visual" aria-hidden="true">
+        <div class="membership-card membership-card--preview">
+          <div class="membership-card__top">
+            <span>CLUB IMPORTB2B</span>
+            <span class="status-badge is-active">ACTIVO</span>
+          </div>
+          <div class="membership-card__body">
+            <small>PUNTOS DEL CLUB</small>
+            <strong>6</strong>
+            <div class="preview-line"><span></span><span></span></div>
+          </div>
+          <div class="membership-card__footer">
+            <span>PROGRESO ACTIVO</span>
+            <span>IMP-000001</span>
+          </div>
+        </div>
+      </div>
+    </section>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/assets/js/config.example.js"></script>
-  <script src="/assets/js/supabaseClient.js"></script>
-  <script src="/assets/js/admin.js"></script>
+    <section class="feature-strip" aria-label="Beneficios del club">
+      <article><strong>Compra + historia</strong><span>Una validación suma 1 punto</span></article>
+      <article><strong>4 clubes</strong><span>Vapers, Jerseys, Perfumes y Club IMPORTB2B</span></article>
+      <article><strong>Progreso claro</strong><span>Siempre sabes cuánto te falta</span></article>
+      <article><strong>Premios reales</strong><span>Beneficios desbloqueados automáticamente</span></article>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>© <span id="currentYear"></span> IMPORTB2B</span>
+    <span>Club privado de clientes</span>
+  </footer>
+
+  <script>
+    document.getElementById("currentYear").textContent = new Date().getFullYear();
+  </script>
 </body>
 </html>
