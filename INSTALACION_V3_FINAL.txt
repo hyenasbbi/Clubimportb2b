@@ -1,0 +1,42 @@
+CLUB IMPORTB2B V3.2 FINAL — INSTALACIÓN
+
+OBJETIVO
+- 1 cliente = 1 código + 1 link.
+- Un cliente puede pertenecer a varios clubes.
+- Cada club tiene puntos, recompensas e historial independientes.
+- client_clubs es la fuente de verdad del progreso.
+
+IMPORTANTE
+- Este paquete está preparado para reemplazar los archivos de la rama main.
+- NO ejecutes supabase/schema.sql: es el schema V2 histórico que se conserva como referencia.
+- NO vuelvas a ejecutar 20260911_merge_duplicate_TEMPLATE.sql.
+- La única migración nueva a ejecutar es:
+  supabase/migrations/20260914_v3_2_final.sql
+
+ORDEN DE INSTALACIÓN
+1. Conservá el ZIP de respaldo MAIN EXACTO que ya descargaste.
+2. Subí/reemplazá TODO el contenido de este paquete en la raíz del repo Clubimportb2b, rama main.
+3. Confirmá que GitHub muestre estos archivos actualizados:
+   - assets/js/admin.js
+   - assets/js/cliente.js
+   - assets/css/multiclub-v3.css
+   - admin/index.html
+   - cliente.html
+   - supabase/migrations/20260914_v3_2_final.sql
+4. En Supabase > SQL Editor > New query, pegá y ejecutá SOLO el contenido de 20260914_v3_2_final.sql.
+5. Esperá el deploy de Netlify.
+6. Probá en ventana incógnita.
+
+PRUEBAS OBLIGATORIAS
+A. Abrir Skill: debe mostrar los puntos reales del Club Vapers.
+B. Abrir Nacho: un solo código y dos tarjetas desplegables si tiene Vapers + Perfumes.
+C. Abrir Tom: un solo código y dos tarjetas desplegables si tiene Jerseys + Perfumes.
+D. En Admin, cada persona aparece una sola vez.
+E. En Admin, la columna Clubes muestra todos sus clubes.
+F. Registrar +1 seleccionando un club: solo ese club debe incrementar.
+G. Agregar un segundo club: no crea otro cliente ni otro código.
+
+SI NETLIFY SIGUE MOSTRANDO LO ANTERIOR
+- Hacer hard refresh Ctrl+Shift+R.
+- Probar ventana incógnita.
+- Revisar que el deploy corresponda al último commit de main.
