@@ -1,6 +1,729 @@
+/* =========================================================
+   IMPORTB2B CLUB — MULTICLUB PREMIUM UI
+   Visual layer only
+   ========================================================= */
 
-.club-memberships{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:16px 0}
-.club-membership{border:1px solid rgba(255,255,255,.1);background:#111;border-radius:14px;padding:14px}
-.club-membership strong{display:block;font-size:18px;margin-bottom:4px}
-.club-membership .club-points{font-size:28px;font-weight:800}
-.club-chip{display:inline-flex;padding:6px 10px;border:1px solid rgba(255,255,255,.12);border-radius:999px;margin:2px 4px 2px 0;font-size:12px}
+:root {
+  --ib-bg: #050607;
+  --ib-surface: #0b0d0f;
+  --ib-surface-2: #101214;
+  --ib-surface-3: #151719;
+
+  --ib-border: rgba(255,255,255,.10);
+  --ib-border-strong: rgba(255,255,255,.17);
+
+  --ib-red: #ff202f;
+  --ib-red-dark: #8d0711;
+  --ib-red-soft: rgba(255,32,47,.12);
+
+  --ib-green: #00e676;
+  --ib-green-soft: rgba(0,230,118,.10);
+
+  --ib-white: #f8f8f8;
+  --ib-muted: #9ca3ad;
+  --ib-muted-2: #6d747d;
+
+  --ib-radius: 22px;
+  --ib-radius-sm: 14px;
+
+  --ib-shadow:
+    0 20px 60px rgba(0,0,0,.38),
+    0 3px 12px rgba(0,0,0,.30);
+}
+
+/* ---------- GENERAL ---------- */
+
+.client-page {
+  background:
+    radial-gradient(
+      circle at 75% 8%,
+      rgba(105,0,8,.13),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 15% 75%,
+      rgba(75,0,7,.08),
+      transparent 30%
+    ),
+    #050607;
+
+  color: var(--ib-white);
+}
+
+.client-shell {
+  width: min(1180px, calc(100% - 40px));
+  margin-inline: auto;
+}
+
+#cardContent {
+  width: 100%;
+}
+
+#cardContent[hidden] {
+  display: none !important;
+}
+
+/* ---------- TYPOGRAPHY ---------- */
+
+.client-page h1,
+.client-page h2,
+.client-page h3,
+.client-page strong {
+  letter-spacing: -.025em;
+}
+
+.client-page h1 {
+  font-size: clamp(2.7rem, 6vw, 5rem);
+  line-height: .95;
+}
+
+.client-page h2 {
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  line-height: 1;
+}
+
+.client-page p {
+  color: var(--ib-muted);
+}
+
+/* ---------- PREMIUM MEMBER CARD ---------- */
+
+.member-card,
+.client-card,
+.membership-card {
+  position: relative;
+  overflow: hidden;
+
+  border: 1px solid var(--ib-border-strong);
+  border-radius: 24px;
+
+  background:
+    linear-gradient(
+      105deg,
+      rgba(22,25,28,.98) 0%,
+      rgba(12,14,16,.98) 55%,
+      rgba(41,4,7,.98) 100%
+    );
+
+  box-shadow: var(--ib-shadow);
+}
+
+.member-card::before,
+.client-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent 0%,
+      transparent 63%,
+      rgba(255,20,35,.12) 64%,
+      transparent 67%
+    );
+}
+
+.member-card::after,
+.client-card::after {
+  content: "";
+  position: absolute;
+  width: 240px;
+  height: 240px;
+  right: -100px;
+  top: -100px;
+
+  background: rgba(255,20,35,.12);
+  filter: blur(80px);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* ---------- STATUS ---------- */
+
+.status-badge,
+.club-status,
+.membership-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  width: max-content;
+
+  padding: 8px 14px;
+  border-radius: 999px;
+
+  font-size: .76rem;
+  font-weight: 800;
+
+  color: #55ff9b;
+  background: var(--ib-green-soft);
+  border: 1px solid rgba(0,230,118,.35);
+
+  box-shadow:
+    inset 0 0 20px rgba(0,230,118,.04),
+    0 0 25px rgba(0,230,118,.04);
+}
+
+.status-badge::before,
+.club-status::before,
+.membership-status::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+
+  border-radius: 50%;
+  background: var(--ib-green);
+
+  box-shadow: 0 0 12px rgba(0,230,118,.75);
+}
+
+/* =========================================================
+   CLUB AREA
+   ========================================================= */
+
+.multiclub-section,
+.clubs-section,
+.club-memberships {
+  margin-top: 54px;
+}
+
+.multiclub-section > h2,
+.clubs-section > h2 {
+  margin-bottom: 12px;
+}
+
+/* ---------- CLUB ACCORDION ---------- */
+
+.club-card,
+.club-membership-card,
+.membership-club {
+  position: relative;
+  overflow: hidden;
+
+  margin: 20px 0;
+
+  border-radius: var(--ib-radius);
+  border: 1px solid var(--ib-border);
+
+  background:
+    radial-gradient(
+      circle at 100% 0%,
+      rgba(153,7,18,.20),
+      transparent 35%
+    ),
+    linear-gradient(
+      135deg,
+      #101214 0%,
+      #090b0c 70%
+    );
+
+  box-shadow:
+    0 20px 55px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,.035);
+
+  transition:
+    transform .25s ease,
+    border-color .25s ease,
+    box-shadow .25s ease;
+}
+
+.club-card:hover,
+.club-membership-card:hover,
+.membership-club:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255,50,65,.30);
+
+  box-shadow:
+    0 24px 70px rgba(0,0,0,.38),
+    0 0 0 1px rgba(255,30,45,.03);
+}
+
+/* ---------- SUMMARY / CLICKABLE HEADER ---------- */
+
+.club-card summary,
+.club-membership-card summary,
+.membership-club summary {
+  list-style: none;
+  cursor: pointer;
+
+  padding: 27px 30px;
+
+  transition: background .2s ease;
+}
+
+.club-card summary::-webkit-details-marker,
+.club-membership-card summary::-webkit-details-marker,
+.membership-club summary::-webkit-details-marker {
+  display: none;
+}
+
+.club-card summary:hover,
+.club-membership-card summary:hover {
+  background: rgba(255,255,255,.012);
+}
+
+/* ---------- OPEN CARD ---------- */
+
+.club-card[open],
+.club-membership-card[open],
+.membership-club[open] {
+  border-color: rgba(255,48,62,.26);
+
+  box-shadow:
+    0 30px 80px rgba(0,0,0,.42),
+    0 0 45px rgba(145,0,12,.05);
+}
+
+/* =========================================================
+   CLUB TITLES / METRICS
+   ========================================================= */
+
+.club-name,
+.club-title {
+  margin: 0;
+
+  font-size: clamp(1.15rem, 2vw, 1.55rem);
+  font-weight: 900;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+
+  color: #fff;
+}
+
+.club-points,
+.points-display {
+  margin-top: 6px;
+
+  font-size: 1.35rem;
+  font-weight: 800;
+
+  color: var(--ib-white);
+}
+
+.club-points strong,
+.points-display strong {
+  color: var(--ib-red);
+}
+
+/* ---------- SMALL EYEBROW ---------- */
+
+.club-eyebrow,
+.section-eyebrow,
+.membership-eyebrow {
+  display: block;
+
+  margin-bottom: 10px;
+
+  color: var(--ib-red);
+
+  font-size: .7rem;
+  font-weight: 900;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+}
+
+/* =========================================================
+   PROGRESS
+   ========================================================= */
+
+.club-progress,
+.progress-track,
+.progress-bar-container {
+  position: relative;
+
+  width: 100%;
+  height: 12px;
+
+  margin: 20px 0 10px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.15);
+
+  background: #11161a;
+
+  box-shadow:
+    inset 0 2px 7px rgba(0,0,0,.7),
+    0 1px 0 rgba(255,255,255,.025);
+}
+
+.club-progress-fill,
+.progress-fill,
+.progress-bar {
+  height: 100%;
+
+  border-radius: inherit;
+
+  background:
+    linear-gradient(
+      90deg,
+      #ff1527,
+      #ff3443
+    );
+
+  box-shadow:
+    0 0 14px rgba(255,25,40,.38);
+
+  transition:
+    width .8s cubic-bezier(.2,.8,.2,1);
+}
+
+.progress-percent,
+.club-progress-percent {
+  color: #fff;
+
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+/* =========================================================
+   CLUB CONTENT
+   ========================================================= */
+
+.club-card__body,
+.club-body,
+.club-content,
+.club-details {
+  padding: 0 30px 30px;
+
+  border-top: 1px solid rgba(255,255,255,.07);
+}
+
+/* ---------- SECTION TITLES ---------- */
+
+.club-card h3,
+.club-content h3,
+.club-details h3 {
+  margin: 27px 0 15px;
+
+  font-size: .76rem;
+  font-weight: 900;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+
+  color: #b5bec9;
+}
+
+/* =========================================================
+   REWARD GRID
+   ========================================================= */
+
+.rewards-grid,
+.club-rewards,
+.rewards-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 13px;
+}
+
+.reward-card,
+.reward-item {
+  position: relative;
+
+  min-height: 125px;
+
+  padding: 18px;
+
+  border-radius: var(--ib-radius-sm);
+  border: 1px solid rgba(255,255,255,.09);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(19,22,24,.96),
+      rgba(10,12,14,.96)
+    );
+
+  transition:
+    transform .2s ease,
+    border-color .2s ease,
+    background .2s ease;
+}
+
+.reward-card:hover,
+.reward-item:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255,255,255,.18);
+}
+
+.reward-card h3,
+.reward-item h3 {
+  margin: 0 0 7px;
+
+  color: #fff;
+
+  font-size: .95rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.reward-card p,
+.reward-item p {
+  margin: 0;
+
+  font-size: .78rem;
+  line-height: 1.45;
+}
+
+/* ---------- LOCKED ---------- */
+
+.reward-card.is-locked,
+.reward-item.is-locked {
+  opacity: .66;
+}
+
+.reward-card.is-locked::after,
+.reward-item.is-locked::after {
+  content: "🔒";
+
+  position: absolute;
+  right: 14px;
+  top: 14px;
+
+  font-size: .85rem;
+  filter: grayscale(1);
+}
+
+/* ---------- UNLOCKED ---------- */
+
+.reward-card.is-unlocked,
+.reward-item.is-unlocked {
+  opacity: 1;
+
+  border-color: rgba(255,32,47,.72);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(54,8,12,.82),
+      rgba(13,14,16,.98)
+    );
+
+  box-shadow:
+    inset 0 0 25px rgba(255,25,40,.04);
+}
+
+/* ---------- DELIVERED ---------- */
+
+.reward-card.is-delivered,
+.reward-item.is-delivered {
+  border-color: rgba(0,230,118,.32);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(0,60,33,.22),
+      rgba(12,15,14,.98)
+    );
+}
+
+/* =========================================================
+   HISTORY
+   ========================================================= */
+
+.history-list,
+.club-history {
+  display: grid;
+  gap: 9px;
+}
+
+.history-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 13px;
+
+  padding: 14px 16px;
+
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 12px;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(20,23,25,.95),
+      rgba(11,13,15,.95)
+    );
+}
+
+.history-dot {
+  width: 8px;
+  height: 8px;
+
+  margin-top: 7px;
+
+  border-radius: 50%;
+
+  background: var(--ib-red);
+
+  box-shadow: 0 0 10px rgba(255,30,45,.35);
+}
+
+.history-item strong {
+  color: #fff;
+}
+
+.history-item p {
+  margin: 4px 0 0;
+
+  font-size: .8rem;
+}
+
+.point-change {
+  color: var(--ib-green);
+
+  font-weight: 900;
+}
+
+/* =========================================================
+   EMPTY STATES
+   ========================================================= */
+
+.empty-state {
+  padding: 22px;
+
+  border: 1px dashed rgba(255,255,255,.10);
+  border-radius: 13px;
+
+  color: var(--ib-muted);
+
+  background: rgba(255,255,255,.015);
+
+  text-align: center;
+}
+
+/* =========================================================
+   DETAILS ARROW
+   ========================================================= */
+
+.club-card summary::after,
+.club-membership-card summary::after,
+.membership-club summary::after {
+  content: "⌄";
+
+  float: right;
+
+  display: grid;
+  place-items: center;
+
+  width: 38px;
+  height: 38px;
+
+  margin-top: -4px;
+
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 11px;
+
+  color: #fff;
+  background: rgba(255,255,255,.045);
+
+  font-size: 1.25rem;
+
+  transition:
+    transform .25s ease,
+    background .25s ease,
+    border-color .25s ease;
+}
+
+.club-card[open] summary::after,
+.club-membership-card[open] summary::after,
+.membership-club[open] summary::after {
+  transform: rotate(180deg);
+
+  background: rgba(255,32,47,.10);
+  border-color: rgba(255,32,47,.30);
+}
+
+/* =========================================================
+   MICROINTERACTIONS
+   ========================================================= */
+
+@keyframes ibReveal {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.club-card[open] .club-card__body,
+.club-membership-card[open] .club-content,
+.membership-club[open] .club-details {
+  animation: ibReveal .28s ease both;
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 800px) {
+
+  .client-shell {
+    width: min(100% - 24px, 1180px);
+  }
+
+  .client-page h1 {
+    font-size: clamp(2.6rem, 13vw, 4rem);
+  }
+
+  .club-card summary,
+  .club-membership-card summary,
+  .membership-club summary {
+    padding: 22px 20px;
+  }
+
+  .club-card__body,
+  .club-body,
+  .club-content,
+  .club-details {
+    padding: 0 20px 22px;
+  }
+
+  .rewards-grid,
+  .club-rewards,
+  .rewards-list {
+    grid-template-columns: 1fr;
+  }
+
+  .reward-card,
+  .reward-item {
+    min-height: auto;
+  }
+}
+
+@media (max-width: 520px) {
+
+  .client-shell {
+    width: calc(100% - 20px);
+  }
+
+  .club-card,
+  .club-membership-card,
+  .membership-club {
+    border-radius: 17px;
+  }
+
+  .club-name,
+  .club-title {
+    font-size: 1rem;
+  }
+
+  .club-points,
+  .points-display {
+    font-size: 1.08rem;
+  }
+
+  .club-card summary::after,
+  .club-membership-card summary::after,
+  .membership-club summary::after {
+    width: 34px;
+    height: 34px;
+  }
+}
